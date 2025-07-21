@@ -9,7 +9,6 @@ import UIKit
 
 final class TabBarController: UITabBarController {
     override func viewDidLoad() {
-print("asfsa")
         super.viewDidLoad()
         let trackerViewController = TrackerViewController()
         let statisticsViewController = StatisticsViewController()
