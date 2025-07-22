@@ -5,7 +5,6 @@
 //  Created by oneche$$$ on 07.07.2025.
 //
 
-import Foundation
 import UIKit
 
 struct Tracker {

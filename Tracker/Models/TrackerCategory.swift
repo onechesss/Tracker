@@ -9,5 +9,10 @@ import Foundation
 
 struct TrackerCategory {
     let name: String
-    var trackers: [Tracker] // нельзя сделать let т.к. иначе нельзя будет создать новый трекер в существующей категории
+    let trackers: [Tracker]
+    
+    func addNewTracker(Tracker: Tracker) -> TrackerCategory {
+        return TrackerCategory(name: self.name,
+                               trackers: self.trackers + [Tracker])
+    }
 }

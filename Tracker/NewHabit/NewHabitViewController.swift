@@ -8,7 +8,7 @@
 import UIKit
 
 protocol NewHabitViewControllerDelegate: AnyObject {
-    func didCreateNewHabit(name: String, categorie: String, schedule: String)
+    func didCreateNewHabit(name: String, category: String, schedule: String)
 }
 
 final class NewHabitViewController: UIViewController, UITextFieldDelegate, ScheduleViewControllerDelegate {
@@ -16,9 +16,9 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
     
     private let label = UILabel()
     private let textField = UITextField()
-    private let categorieButton = UIButton()
-    private let categorieTextInCategorieButton = UILabel()
-    private let chosenCategorieText = UILabel()
+    private let categoryButton = UIButton()
+    private let categoryTextInCategoryButton = UILabel()
+    private let chosenCategoryText = UILabel()
     private let scheduleButton = UIButton()
     private let scheduleTextInScheduleButton = UILabel()
     private let chosenScheduleText = UILabel()
@@ -65,7 +65,7 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
     }
     
     @objc private func createButtonTapped() {
-        delegate?.didCreateNewHabit(name: trackerName, categorie: "Мок-категория", schedule: chosenScheduleText.text!) // не может быть nil т.к. проверка на nil уже была
+        delegate?.didCreateNewHabit(name: trackerName, category: "Мок-категория", schedule: chosenScheduleText.text!) // не может быть nil т.к. проверка на nil уже была
         dismiss(animated: true)
     }
 }
@@ -78,7 +78,7 @@ private extension NewHabitViewController {
         textField.delegate = self
         setUpLabel()
         setUpTextField()
-        setUpCategorieButton()
+        setUpCategoryButton()
         setUpDividerBetweenButtons()
         setUpScheduleButton()
         setUpCreateButton()
@@ -119,31 +119,31 @@ private extension NewHabitViewController {
         textField.layer.masksToBounds = true
     }
     
-    private func setUpCategorieButton() {
-        categorieButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(categorieButton)
-        categorieButton.backgroundColor = UIColor(red: 230/255, green: 232/255, blue: 235/255, alpha: 0.3)
-        categorieButton.topAnchor.constraint(equalTo: textField.bottomAnchor, constant: 24).isActive = true
-        categorieButton.heightAnchor.constraint(equalToConstant: 75).isActive = true
-        categorieButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
-        categorieButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
-        categorieButton.layer.masksToBounds = true
-        categorieButton.layer.cornerRadius = 16
-        categorieButton.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
-        categorieTextInCategorieButton.translatesAutoresizingMaskIntoConstraints = false
-        categorieButton.addSubview(categorieTextInCategorieButton)
-        categorieTextInCategorieButton.text = "Категория"
-        categorieTextInCategorieButton.font = .systemFont(ofSize: 17, weight: .regular)
-        categorieTextInCategorieButton.textColor = .black
-        categorieTextInCategorieButton.leadingAnchor.constraint(equalTo: categorieButton.leadingAnchor, constant: 16).isActive = true
-        categorieTextInCategorieButton.topAnchor.constraint(equalTo: categorieButton.topAnchor, constant: 27).isActive = true
+    private func setUpCategoryButton() {
+        categoryButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(categoryButton)
+        categoryButton.backgroundColor = UIColor(red: 230/255, green: 232/255, blue: 235/255, alpha: 0.3)
+        categoryButton.topAnchor.constraint(equalTo: textField.bottomAnchor, constant: 24).isActive = true
+        categoryButton.heightAnchor.constraint(equalToConstant: 75).isActive = true
+        categoryButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        categoryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        categoryButton.layer.masksToBounds = true
+        categoryButton.layer.cornerRadius = 16
+        categoryButton.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        categoryTextInCategoryButton.translatesAutoresizingMaskIntoConstraints = false
+        categoryButton.addSubview(categoryTextInCategoryButton)
+        categoryTextInCategoryButton.text = "Категория"
+        categoryTextInCategoryButton.font = .systemFont(ofSize: 17, weight: .regular)
+        categoryTextInCategoryButton.textColor = .black
+        categoryTextInCategoryButton.leadingAnchor.constraint(equalTo: categoryButton.leadingAnchor, constant: 16).isActive = true
+        categoryTextInCategoryButton.topAnchor.constraint(equalTo: categoryButton.topAnchor, constant: 27).isActive = true
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
-        categorieButton.addSubview(imageView)
+        categoryButton.addSubview(imageView)
         imageView.image = .buttonNext
         NSLayoutConstraint.activate(
-            [imageView.trailingAnchor.constraint(equalTo: categorieButton.trailingAnchor, constant: -16),
-             imageView.topAnchor.constraint(equalTo: categorieButton.topAnchor, constant: 26)
+            [imageView.trailingAnchor.constraint(equalTo: categoryButton.trailingAnchor, constant: -16),
+             imageView.topAnchor.constraint(equalTo: categoryButton.topAnchor, constant: 26)
             ]
         )
     }
@@ -152,8 +152,8 @@ private extension NewHabitViewController {
         dividerBetweenButtons.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(dividerBetweenButtons)
         dividerBetweenButtons.image = UIImage(named: "divider")
-        dividerBetweenButtons.topAnchor.constraint(equalTo: categorieButton.bottomAnchor).isActive = true
-        dividerBetweenButtons.centerXAnchor.constraint(equalTo: categorieButton.centerXAnchor).isActive = true
+        dividerBetweenButtons.topAnchor.constraint(equalTo: categoryButton.bottomAnchor).isActive = true
+        dividerBetweenButtons.centerXAnchor.constraint(equalTo: categoryButton.centerXAnchor).isActive = true
         dividerBetweenButtons.heightAnchor.constraint(equalToConstant: 1).isActive = true
         dividerBetweenButtons.widthAnchor.constraint(equalToConstant: 311).isActive = true
     }
@@ -162,7 +162,7 @@ private extension NewHabitViewController {
         scheduleButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scheduleButton)
         scheduleButton.backgroundColor = UIColor(red: 230/255, green: 232/255, blue: 235/255, alpha: 0.3)
-        scheduleButton.topAnchor.constraint(equalTo: categorieButton.bottomAnchor).isActive = true
+        scheduleButton.topAnchor.constraint(equalTo: categoryButton.bottomAnchor).isActive = true
         scheduleButton.heightAnchor.constraint(equalToConstant: 75).isActive = true
         scheduleButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         scheduleButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true

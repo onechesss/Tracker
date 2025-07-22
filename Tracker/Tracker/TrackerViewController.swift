@@ -8,6 +8,8 @@
 import UIKit
 
 final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHabitViewControllerDelegate, TrackerCellDelegate {
+    var currentDate = Date()
+    
     private let errorImage = UIImageView()
     private let textView = UILabel()
     private let searchField = UISearchTextField()
@@ -27,15 +29,22 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         layout.sectionInset = .init(top: 30, left: 0, bottom: 0, right: 0)
         return layout
     }()
-    
     private var categories: [TrackerCategory] = [TrackerCategory(name: "Мок-категория", trackers: [])] // временно (в рамках спринта 14)
+    private var visibleCategories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
-    
     private var idCounter: UInt = 0 // в будущих спринтах будет реализовано с помощью баз данных, userDefaults или keychain (чтобы при перезапуске приложения не создавались трекеры с уже используемыми id)
+    private var dateFormatter: DateFormatter = {
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "ru_RU")
+        dateFormatter.dateFormat = "EEE"
+        return dateFormatter
+    }()
+    private let calendar = Calendar.current
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
+        reloadVisibleCategories()
     }
     
     // MARK: UITextFieldDelegate method
@@ -45,14 +54,12 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     }
     
     // MARK: NewHabitViewControllerDelegate method
-    func didCreateNewHabit(name: String, categorie: String, schedule: String) {
-        if let index = categories.firstIndex(where: { $0.name == categorie }) {
-            categories[index].trackers.append(Tracker(id: idCounter, name: name, color: .ypGreen, emoji: "😁", schedule: schedule))
+    func didCreateNewHabit(name: String, category: String, schedule: String) {
+        if let index = categories.firstIndex(where: { $0.name == category }) {
+            categories[index] = categories[index].addNewTracker(Tracker: Tracker(id: idCounter, name: name, color: .ypGreen, emoji: "😁", schedule: schedule))
         }
         idCounter += 1
-        collectionView.reloadData()
-        textView.isHidden = true // временно (в рамках спринта 14)
-        errorImage.isHidden = true // временно (в рамках спринта 14)
+        reloadVisibleCategories()
     }
     
     func plusButtonInCellSelected(in cell: TrackerCell) {
@@ -64,11 +71,61 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
             completedTrackers.remove(at: index)
         }
     }
+    
+    private func reloadVisibleCategories() {
+        visibleCategories = []
+        for category in categories {
+            for tracker in category.trackers {
+                if tracker.schedule.contains(dateFormatter.string(from: currentDate)) {
+                    visibleCategories.append(TrackerCategory(name: category.name, trackers: []))
+                    break
+                }
+            }
+        }
+        var i = -1
+        for category in categories {
+            i += 1
+            for tracker in category.trackers {
+                if tracker.schedule.contains(dateFormatter.string(from: currentDate)) {
+                    visibleCategories[i] = visibleCategories[i].addNewTracker(Tracker: tracker)
+                }
+            }
+        }
+        collectionView.reloadData()
+        if !visibleCategories.isEmpty {
+            errorImage.isHidden = true
+            textView.isHidden = true
+        } else {
+            errorImage.isHidden = false
+            textView.isHidden = false
+        }
+    }
+    
+    private func checkTrackerRecord(id: UInt, date: Date) -> (Bool, Int) {
+        var isThereIsRecordOnThatDay: Bool = false
+        for record in completedTrackers {
+            if record.id == id && calendar.isDate(record.date, inSameDayAs: date) {
+                isThereIsRecordOnThatDay = true
+            }
+        }
+        var counterOfCompletedTrackers = 0
+        for record in completedTrackers {
+            if record.id == id {
+                counterOfCompletedTrackers += 1
+            }
+        }
+        return (isThereIsRecordOnThatDay, counterOfCompletedTrackers)
+    }
 
     @objc private func plusButtonTapped() {
         let vc = NewHabitViewController()
         vc.delegate = self
         present(vc, animated: true)
+    }
+    
+    @objc private func datePickerValueChanged() {
+        currentDate = datePicker.date
+        reloadVisibleCategories()
     }
 }
 
@@ -76,11 +133,11 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
 // MARK: CollectionViewDataSource
 extension TrackerViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return categories[section].trackers.count
+        return visibleCategories[section].trackers.count
     }
     
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return categories.count
+        return visibleCategories.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -90,11 +147,14 @@ extension TrackerViewController: UICollectionViewDataSource {
         }
         cell.delegate = self
         cell.backgroundColor = .white
+        let recordTuple = checkTrackerRecord(id: visibleCategories[indexPath.section].trackers[indexPath.row].id, date: currentDate)
         cell.configureCell(
-            task: categories[indexPath.section].trackers[indexPath.row].name,
-            emoji: categories[indexPath.section].trackers[indexPath.row].emoji,
-            color: categories[indexPath.section].trackers[indexPath.row].color,
-            id: categories[indexPath.section].trackers[indexPath.row].id
+            task: visibleCategories[indexPath.section].trackers[indexPath.row].name,
+            emoji: visibleCategories[indexPath.section].trackers[indexPath.row].emoji,
+            color: visibleCategories[indexPath.section].trackers[indexPath.row].color,
+            id: visibleCategories[indexPath.section].trackers[indexPath.row].id,
+            days: recordTuple.1,
+            isDoneOnThatDay: recordTuple.0
         )
         return cell
     }
@@ -104,7 +164,7 @@ extension TrackerViewController: UICollectionViewDataSource {
         else {
             return UICollectionReusableView()
         }
-        header.configureHeader(with: categories[indexPath.section].name)
+        header.configureHeader(with: visibleCategories[indexPath.section].name)
         return header
     }
 }
@@ -168,6 +228,7 @@ private extension TrackerViewController {
         dp.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         dp.datePickerMode = .date
         dp.preferredDatePickerStyle = .compact
+        dp.addTarget(self, action: #selector(datePickerValueChanged), for: .valueChanged)
     }
     
     private func setUpErrorImage(image: UIImageView) {
@@ -203,4 +264,3 @@ private extension TrackerViewController {
         cv.backgroundColor = .white
     }
 }
-

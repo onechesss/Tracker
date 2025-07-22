@@ -10,6 +10,7 @@ import UIKit
 protocol TrackerCellDelegate: AnyObject {
     func plusButtonInCellSelected(in cell: TrackerCell)
     func plusButtonInCellDeselected(in cell: TrackerCell)
+    var currentDate: Date { get set }
 }
 
 final class TrackerCell: UICollectionViewCell {
@@ -23,6 +24,8 @@ final class TrackerCell: UICollectionViewCell {
     private let button = UIButton()
     private let emojiBackgroundView = UIView()
     
+    private let calendar = Calendar.current
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupView()
@@ -32,10 +35,39 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configureCell(task: String, emoji: String, color: UIColor, id: UInt) {
+    func configureCell(task: String, emoji: String, color: UIColor, id: UInt, days: Int, isDoneOnThatDay: Bool) {
         taskLabel.text = task
         emojiLabel.text = emoji
         colorView.backgroundColor = color
+        self.id = id
+        daysLabel.text = "\(days) \(rightDaysWord(days: days))"
+        if isDoneOnThatDay {
+            button.isSelected = true
+        } else {
+            button.isSelected = false
+        }
+        guard let delegate else { return }
+        button.isEnabled = true
+        if delegate.currentDate > Date() && !calendar.isDate(delegate.currentDate, inSameDayAs: Date()) {
+            button.isEnabled = false
+        }
+    }
+    
+    private func rightDaysWord(days: Int) -> String {
+        switch days {
+        case 0:
+            return "дней"
+        case 1:
+            return "день"
+        case 2:
+            return "дня"
+        case 3:
+            return "дня"
+        case 4:
+            return "дня"
+        default:
+            return "дней"
+        }
     }
     
     @objc private func buttonTapped() {
@@ -44,28 +76,12 @@ final class TrackerCell: UICollectionViewCell {
             button.isSelected = false
 // здесь и далее используется force unwrap т.к. свойства точно не nil
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
-            if Int(numberAndWord[0])! - 1 == 0 {
-                daysLabel.text = "\(Int(numberAndWord[0])! - 1) дней"
-            } else if Int(numberAndWord[0])! - 1 == 1 {
-                daysLabel.text = "\(Int(numberAndWord[0])! - 1) день"
-            } else if Int(numberAndWord[0])! - 1 >= 2 && Int(numberAndWord[0])! - 1 <= 4 {
-                daysLabel.text = "\(Int(numberAndWord[0])! - 1) дня"
-            } else {
-                daysLabel.text = "\(Int(numberAndWord[0])! - 1) дней"
-            }
+            daysLabel.text = "\(Int(numberAndWord[0])! - 1) \(rightDaysWord(days: Int(numberAndWord[0])! - 1))"
         } else {
             delegate?.plusButtonInCellSelected(in: self)
             button.isSelected = true
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
-            if Int(numberAndWord[0])! + 1 == 0 {
-                daysLabel.text = "\(Int(numberAndWord[0])! + 1) дней"
-            } else if Int(numberAndWord[0])! + 1 == 1 {
-                daysLabel.text = "\(Int(numberAndWord[0])! + 1) день"
-            } else if Int(numberAndWord[0])! + 1 >= 2 && Int(numberAndWord[0])! - 1 <= 4 {
-                daysLabel.text = "\(Int(numberAndWord[0])! + 1) дня"
-            } else {
-                daysLabel.text = "\(Int(numberAndWord[0])! + 1) дней"
-            }
+            daysLabel.text = "\(Int(numberAndWord[0])! + 1) \(rightDaysWord(days: Int(numberAndWord[0])! + 1))"
         }
     }
 }

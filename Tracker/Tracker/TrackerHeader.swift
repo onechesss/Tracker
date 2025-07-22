@@ -8,15 +8,15 @@
 import UIKit
 
 final class TrackerHeader: UICollectionReusableView {
-    let categorieLabel = UILabel()
+    let categoryLabel = UILabel()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        categorieLabel.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(categorieLabel)
-        categorieLabel.text = "Домашний уют"
-        categorieLabel.font = .systemFont(ofSize: 19, weight: .bold)
-        categorieLabel.textColor = .black
+        categoryLabel.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(categoryLabel)
+        categoryLabel.text = "Домашний уют"
+        categoryLabel.font = .systemFont(ofSize: 19, weight: .bold)
+        categoryLabel.textColor = .black
     }
     
     required init?(coder: NSCoder) {
@@ -24,6 +24,6 @@ final class TrackerHeader: UICollectionReusableView {
     }
     
     func configureHeader(with text: String) {
-        categorieLabel.text = text
+        categoryLabel.text = text
     }
 }
