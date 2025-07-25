@@ -54,7 +54,11 @@ final class TrackerCell: UICollectionViewCell {
     }
     
     private func rightDaysWord(days: Int) -> String {
-        switch days {
+        if days == 11 || days == 12 || days == 13 || days == 14 {
+            return "дней"
+        }
+        let remainderOfDivisionByTen = days % 10
+        switch remainderOfDivisionByTen {
         case 0:
             return "дней"
         case 1:
