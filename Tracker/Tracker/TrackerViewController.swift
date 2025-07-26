@@ -16,10 +16,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     private let trackersTextLabel = UILabel()
     private let datePicker = UIDatePicker()
     private let plusButton = UIButton()
-    private lazy var collectionView: UICollectionView = {
-        let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        return collectionView
-    }()
+    private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
     
     private let layout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
@@ -44,6 +41,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
+        collectionView.dataSource = self
         reloadVisibleCategories()
     }
     
@@ -252,7 +250,6 @@ private extension TrackerViewController {
     }
     
     private func setUpCollectionView(cv: UICollectionView) {
-        cv.dataSource = self
         cv.register(TrackerCell.self, forCellWithReuseIdentifier: "trackerCell")
         cv.register(TrackerHeader.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "header")
         cv.translatesAutoresizingMaskIntoConstraints = false

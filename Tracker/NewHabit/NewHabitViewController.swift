@@ -13,7 +13,7 @@ protocol NewHabitViewControllerDelegate: AnyObject {
 
 final class NewHabitViewController: UIViewController, UITextFieldDelegate, ScheduleViewControllerDelegate {
     weak var delegate: NewHabitViewControllerDelegate?
-    
+
     private let label = UILabel()
     private let textField = UITextField()
     private let categoryButton = UIButton()
@@ -25,13 +25,28 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
     private let cancelButton = UIButton()
     private let createButton = UIButton()
     private let dividerBetweenButtons = UIImageView()
+    private let emojiLabel = UILabel()
+    private lazy var emojiCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layoutForBothCollectionViews)
+    private let colorLabel = UILabel()
+    private lazy var colorsCollectionView = UICollectionView(frame: .zero, collectionViewLayout: layoutForBothCollectionViews)
     
+    private lazy var layoutForBothCollectionViews: UICollectionViewFlowLayout = {
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 52, height: 52)
+        layout.minimumInteritemSpacing = ((view.bounds.width - 36 - (52 * 6)) / 5)
+        layout.minimumLineSpacing = 0
+        return layout
+    }()
+                      
+    private let emojisArray = ["🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝️", "😪"]
     private var chosenWeekdays: [String : Bool] = [:]
     private var trackerName: String = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupViews()
+        textField.delegate = self
+        emojiCollectionView.dataSource = self
     }
     
     // MARK: UITextFieldDelegate method
@@ -71,11 +86,27 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
 }
 
 
+// MARK: emojiCollectionView data source
+extension NewHabitViewController: UICollectionViewDataSource {
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return 18
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard let cell = emojiCollectionView.dequeueReusableCell(withReuseIdentifier: "emojiAndColorCell", for: indexPath) as? EmojiAndColorCell
+        else {
+            return UICollectionViewCell()
+        }
+        cell.configureCell(emoji: emojisArray[indexPath.item])
+        return cell
+    }
+}
+
+
 // MARK: view setup
 private extension NewHabitViewController {
     private func setupViews() {
         view.backgroundColor = .white
-        textField.delegate = self
         setUpLabel()
         setUpTextField()
         setUpCategoryButton()
@@ -83,6 +114,10 @@ private extension NewHabitViewController {
         setUpScheduleButton()
         setUpCreateButton()
         setUpCancelButton()
+        setUpEmojiLabel()
+        setUpEmojiCollectionView()
+        setUpColorLabel()
+        setUpColorsCollectionView()
     }
     
     private func setUpLabel() {
@@ -229,6 +264,47 @@ private extension NewHabitViewController {
         if textField.text != "" && textField.text != nil {
             createButton.isEnabled = true
         }
+    }
+    
+    private func setUpEmojiLabel() {
+        emojiLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(emojiLabel)
+        emojiLabel.text = "Emoji"
+        emojiLabel.font = .systemFont(ofSize: 19, weight: .bold)
+        emojiLabel.topAnchor.constraint(equalTo: scheduleButton.bottomAnchor, constant: 32).isActive = true
+        emojiLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28).isActive = true
+        emojiLabel.textColor = .black
+    }
+    
+    private func setUpEmojiCollectionView() {
+        emojiCollectionView.register(EmojiAndColorCell.self, forCellWithReuseIdentifier: "emojiAndColorCell")
+        emojiCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(emojiCollectionView)
+        emojiCollectionView.topAnchor.constraint(equalTo: emojiLabel.bottomAnchor, constant: 24).isActive = true
+        emojiCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -18).isActive = true
+        emojiCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 18).isActive = true
+        emojiCollectionView.heightAnchor.constraint(equalToConstant: 156).isActive = true
+        emojiCollectionView.backgroundColor = .red
+    }
+    
+    private func setUpColorLabel() {
+        colorLabel.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(colorLabel)
+        colorLabel.textColor = .black
+        colorLabel.text = "Цвет"
+        colorLabel.font = .systemFont(ofSize: 19, weight: .bold)
+        colorLabel.topAnchor.constraint(equalTo: emojiCollectionView.bottomAnchor, constant: 40).isActive = true
+        colorLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28).isActive = true
+    }
+    
+    private func setUpColorsCollectionView() {
+        //colorsCollectionView.register(EmojiAndColorCell.self, forCellWithReuseIdentifier: "EmojiAndColorCell")
+        //colorsCollectionView.translatesAutoresizingMaskIntoConstraints = false
+        //view.addSubview(colorsCollectionView)
+        //colorsCollectionView.topAnchor.constraint(equalTo: colorLabel.bottomAnchor, constant: 24).isActive = true
+        //colorsCollectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -18).isActive = true
+        //colorsCollectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 18).isActive = true
+        //colorsCollectionView.heightAnchor.constraint(equalToConstant: 156).isActive = true
     }
 }
 

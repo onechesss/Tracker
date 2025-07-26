@@ -14,7 +14,6 @@ final class TrackerHeader: UICollectionReusableView {
         super.init(frame: frame)
         categoryLabel.translatesAutoresizingMaskIntoConstraints = false
         addSubview(categoryLabel)
-        categoryLabel.text = "Домашний уют"
         categoryLabel.font = .systemFont(ofSize: 19, weight: .bold)
         categoryLabel.textColor = .black
     }
