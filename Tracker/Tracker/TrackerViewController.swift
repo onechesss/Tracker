@@ -17,7 +17,6 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     private let datePicker = UIDatePicker()
     private let plusButton = UIButton()
     private lazy var collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-    
     private let layout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 167, height: 148)
@@ -29,7 +28,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     private var categories: [TrackerCategory] = [TrackerCategory(name: "Мок-категория", trackers: [])] // временно (в рамках спринта 14)
     private var visibleCategories: [TrackerCategory] = []
     private var completedTrackers: [TrackerRecord] = []
-    private var idCounter: UInt = 0 // в будущих спринтах будет реализовано с помощью баз данных, userDefaults или keychain (чтобы при перезапуске приложения не создавались трекеры с уже используемыми id)
+    private var id = UUID()
     private var dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ru_RU")
@@ -37,11 +36,17 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         return dateFormatter
     }()
     private let calendar = Calendar.current
+    private let trackerStore = TrackerStore()
+    private let trackerRecordStore = TrackerRecordStore()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         collectionView.dataSource = self
+        for tracker in trackerStore.trackersLoadedFromCoreData {
+            categories[0] = categories[0].addNewTracker(Tracker: tracker)
+        }
+        completedTrackers = trackerRecordStore.trackersRecordsLoadedFromCoreData
         reloadVisibleCategories()
     }
     
@@ -52,22 +57,45 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     }
     
     // MARK: NewHabitViewControllerDelegate method
-    func didCreateNewHabit(name: String, category: String, schedule: String) {
+    func didCreateNewHabit(name: String, category: String, schedule: String, emoji: String, color: UIColor) {
         if let index = categories.firstIndex(where: { $0.name == category }) {
-            categories[index] = categories[index].addNewTracker(Tracker: Tracker(id: idCounter, name: name, color: .ypGreen, emoji: "😁", schedule: schedule))
+            categories[index] = categories[index].addNewTracker(Tracker: Tracker(
+                id: id,
+                name: name,
+                redPartOfColor: Float(color.cgColor.components?[0] ?? 0),
+                greenPartOfColor: Float(color.cgColor.components?[1] ?? 0),
+                bluePartOfColor: Float(color.cgColor.components?[2] ?? 0),
+                emoji: emoji,
+                schedule: schedule)
+            )
+            trackerStore.addTrackerToCoreData(tracker: Tracker(
+                id: id,
+                name: name,
+                redPartOfColor: Float(color.cgColor.components?[0] ?? 0),
+                greenPartOfColor: Float(color.cgColor.components?[1] ?? 0),
+                bluePartOfColor: Float(color.cgColor.components?[2] ?? 0),
+                emoji: emoji,
+                schedule: schedule), in: categories[index], with: categories[index].trackers)
         }
-        idCounter += 1
+        reloadVisibleCategories()
+    }
+    
+    // MARK: DataProviderDelegate method
+    func didUpdate(tracker: Tracker, indexPath: IndexPath) {
+        categories[indexPath.section] = categories[indexPath.section].addNewTracker(Tracker: tracker)
         reloadVisibleCategories()
     }
     
     func plusButtonInCellSelected(in cell: TrackerCell) {
         completedTrackers.append(TrackerRecord(id: cell.id, date: datePicker.date))
+        trackerRecordStore.addTrackerRecordToCoreData(record: TrackerRecord(id: cell.id, date: currentDate))
     }
     
     func plusButtonInCellDeselected(in cell: TrackerCell) {
         if let index = completedTrackers.firstIndex(where: { $0.id == cell.id }) {
             completedTrackers.remove(at: index)
         }
+        trackerRecordStore.deleteTrackerRecordInCoreData(record: TrackerRecord(id: cell.id, date: currentDate))
     }
     
     private func reloadVisibleCategories() {
@@ -99,7 +127,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         }
     }
     
-    private func checkTrackerRecord(id: UInt, date: Date) -> (Bool, Int) {
+    private func checkTrackerRecord(id: UUID, date: Date) -> (Bool, Int) {
         var isThereIsRecordOnThatDay: Bool = false
         for record in completedTrackers {
             if record.id == id && calendar.isDate(record.date, inSameDayAs: date) {
@@ -149,7 +177,7 @@ extension TrackerViewController: UICollectionViewDataSource {
         cell.configureCell(
             task: visibleCategories[indexPath.section].trackers[indexPath.row].name,
             emoji: visibleCategories[indexPath.section].trackers[indexPath.row].emoji,
-            color: visibleCategories[indexPath.section].trackers[indexPath.row].color,
+            color: UIColor(red: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.row].redPartOfColor), green: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.row].greenPartOfColor), blue: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.row].bluePartOfColor), alpha: 1),
             id: visibleCategories[indexPath.section].trackers[indexPath.row].id,
             days: recordTuple.1,
             isDoneOnThatDay: recordTuple.0

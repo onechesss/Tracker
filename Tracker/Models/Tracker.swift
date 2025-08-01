@@ -7,10 +7,12 @@
 
 import UIKit
 
-struct Tracker {
-    let id: UInt
+struct Tracker: Codable {
+    let id: UUID
     let name: String
-    let color: UIColor
+    let redPartOfColor: Float
+    let greenPartOfColor: Float
+    let bluePartOfColor: Float
     let emoji: String
     let schedule: String
 }

@@ -15,7 +15,7 @@ protocol TrackerCellDelegate: AnyObject {
 
 final class TrackerCell: UICollectionViewCell {
     weak var delegate: TrackerCellDelegate?
-    var id: UInt = 0
+    var id = UUID()
     
     private let taskLabel = UILabel()
     private let emojiLabel = UILabel()
@@ -35,7 +35,7 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configureCell(task: String, emoji: String, color: UIColor, id: UInt, days: Int, isDoneOnThatDay: Bool) {
+    func configureCell(task: String, emoji: String, color: UIColor, id: UUID, days: Int, isDoneOnThatDay: Bool) {
         taskLabel.text = task
         emojiLabel.text = emoji
         colorView.backgroundColor = color

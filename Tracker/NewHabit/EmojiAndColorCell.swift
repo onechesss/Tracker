@@ -8,8 +8,9 @@
 import UIKit
 
 final class EmojiAndColorCell: UICollectionViewCell {
-    private let emojiLabel = UILabel()
-    private let colorView = UIView()
+    let emojiLabel = UILabel()
+    let colorView = UIView()
+    let selectedColorRing = UIView()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -20,12 +21,13 @@ final class EmojiAndColorCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configureCell(emoji: String) {
+    func configureEmoji(emoji: String) {
         emojiLabel.text = emoji
     }
     
     func configureColor(color: UIColor) {
-        
+        colorView.backgroundColor = color
+        selectedColorRing.layer.borderColor = colorView.backgroundColor?.cgColor.copy(alpha: 0.3)
     }
 }
 
@@ -35,6 +37,7 @@ private extension EmojiAndColorCell {
     private func setupView() {
         setUpEmojiLabel()
         setUpColorView()
+        setUpSelectedColorRing()
     }
     
     private func setUpEmojiLabel() {
@@ -53,5 +56,16 @@ private extension EmojiAndColorCell {
         colorView.centerXAnchor.constraint(equalTo: contentView.centerXAnchor).isActive = true
         colorView.centerYAnchor.constraint(equalTo: contentView.centerYAnchor).isActive = true
         colorView.layer.cornerRadius = 8
+    }
+    
+    private func setUpSelectedColorRing() {
+        selectedColorRing.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(selectedColorRing)
+        selectedColorRing.widthAnchor.constraint(equalToConstant: 52).isActive = true
+        selectedColorRing.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        selectedColorRing.layer.cornerRadius = 8
+        selectedColorRing.layer.masksToBounds = true
+        selectedColorRing.layer.borderWidth = 3
+        selectedColorRing.isHidden = true
     }
 }
