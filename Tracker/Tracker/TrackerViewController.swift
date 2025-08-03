@@ -20,6 +20,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     private let layout: UICollectionViewFlowLayout = {
         let layout = UICollectionViewFlowLayout()
         layout.itemSize = CGSize(width: 167, height: 148)
+        layout.minimumInteritemSpacing = 9
         layout.scrollDirection = .vertical
         layout.headerReferenceSize = CGSize(width: 200, height: 6)
         layout.sectionInset = .init(top: 30, left: 0, bottom: 0, right: 0)

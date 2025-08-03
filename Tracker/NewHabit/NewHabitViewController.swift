@@ -391,7 +391,3 @@ private extension NewHabitViewController {
         colorsCollectionView.backgroundColor = .white
     }
 }
-
-#Preview {
-    NewHabitViewController()
-}

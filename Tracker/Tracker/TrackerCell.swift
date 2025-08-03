@@ -39,6 +39,7 @@ final class TrackerCell: UICollectionViewCell {
         taskLabel.text = task
         emojiLabel.text = emoji
         colorView.backgroundColor = color
+        button.tintColor = color
         self.id = id
         daysLabel.text = "\(days) \(rightDaysWord(days: days))"
         if isDoneOnThatDay {
@@ -81,11 +82,13 @@ final class TrackerCell: UICollectionViewCell {
 // здесь и далее используется force unwrap т.к. свойства точно не nil
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
             daysLabel.text = "\(Int(numberAndWord[0])! - 1) \(rightDaysWord(days: Int(numberAndWord[0])! - 1))"
+            button.tintColor = colorView.backgroundColor
         } else {
             delegate?.plusButtonInCellSelected(in: self)
             button.isSelected = true
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
             daysLabel.text = "\(Int(numberAndWord[0])! + 1) \(rightDaysWord(days: Int(numberAndWord[0])! + 1))"
+            button.tintColor = colorView.backgroundColor
         }
     }
 }
