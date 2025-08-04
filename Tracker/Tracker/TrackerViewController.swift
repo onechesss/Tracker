@@ -28,7 +28,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     }()
     private var categories: [TrackerCategory] = [TrackerCategory(name: "Мок-категория", trackers: [])] // временно (в рамках спринта 14)
     private var visibleCategories: [TrackerCategory] = []
-    private var completedTrackers: [TrackerRecord] = []
+    private lazy var completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
     private var id = UUID()
     private var dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
@@ -78,12 +78,6 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
                 emoji: emoji,
                 schedule: schedule), in: categories[index], with: categories[index].trackers)
         }
-        reloadVisibleCategories()
-    }
-    
-    // MARK: DataProviderDelegate method
-    func didUpdate(tracker: Tracker, indexPath: IndexPath) {
-        categories[indexPath.section] = categories[indexPath.section].addNewTracker(Tracker: tracker)
         reloadVisibleCategories()
     }
     

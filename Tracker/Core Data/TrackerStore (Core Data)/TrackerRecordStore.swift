@@ -16,7 +16,7 @@ final class TrackerRecordStore {
     init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { fatalError("context couldn't be initialized") }
         context = appDelegate.persistentContainer.viewContext
-        getTrackerRecordsFromCoreData()
+        trackersRecordsLoadedFromCoreData = getTrackerRecordsFromCoreData()
     }
     
     func addTrackerRecordToCoreData(record: TrackerRecord) {
@@ -27,14 +27,15 @@ final class TrackerRecordStore {
         appDelegate.saveContext()
     }
     
-    func getTrackerRecordsFromCoreData() {
+    func getTrackerRecordsFromCoreData() -> [TrackerRecord] {
         let request = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
-        guard let trackerRecords = try? context.fetch(request) else { return }
+        guard let trackerRecords = try? context.fetch(request) else { return [] }
         for trackerRecord in trackerRecords {
             trackersRecordsLoadedFromCoreData.append(TrackerRecord(id: trackerRecord.id ?? UUID(), date: trackerRecord.date ?? Date()))
         }
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return [] }
         appDelegate.saveContext()
+        return trackersRecordsLoadedFromCoreData
     }
     
     func deleteTrackerRecordInCoreData(record: TrackerRecord) {
