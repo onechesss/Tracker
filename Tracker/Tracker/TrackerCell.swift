@@ -15,7 +15,7 @@ protocol TrackerCellDelegate: AnyObject {
 
 final class TrackerCell: UICollectionViewCell {
     weak var delegate: TrackerCellDelegate?
-    var id: UInt = 0
+    var id = UUID()
     
     private let taskLabel = UILabel()
     private let emojiLabel = UILabel()
@@ -35,10 +35,11 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func configureCell(task: String, emoji: String, color: UIColor, id: UInt, days: Int, isDoneOnThatDay: Bool) {
+    func configureCell(task: String, emoji: String, color: UIColor, id: UUID, days: Int, isDoneOnThatDay: Bool) {
         taskLabel.text = task
         emojiLabel.text = emoji
         colorView.backgroundColor = color
+        button.tintColor = color
         self.id = id
         daysLabel.text = "\(days) \(rightDaysWord(days: days))"
         if isDoneOnThatDay {
@@ -81,11 +82,13 @@ final class TrackerCell: UICollectionViewCell {
 // здесь и далее используется force unwrap т.к. свойства точно не nil
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
             daysLabel.text = "\(Int(numberAndWord[0])! - 1) \(rightDaysWord(days: Int(numberAndWord[0])! - 1))"
+            button.tintColor = colorView.backgroundColor
         } else {
             delegate?.plusButtonInCellSelected(in: self)
             button.isSelected = true
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
             daysLabel.text = "\(Int(numberAndWord[0])! + 1) \(rightDaysWord(days: Int(numberAndWord[0])! + 1))"
+            button.tintColor = colorView.backgroundColor
         }
     }
 }

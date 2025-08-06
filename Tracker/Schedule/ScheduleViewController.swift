@@ -302,7 +302,3 @@ private extension ScheduleViewController {
         readyButton.addTarget(self, action: #selector(readyButtonTapped), for: .touchUpInside)
     }
 }
-
-#Preview {
-    ScheduleViewController()
-}
