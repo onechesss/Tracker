@@ -28,8 +28,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     }()
     private var categories: [TrackerCategory] = [TrackerCategory(name: "Мок-категория", trackers: [])] // временно (в рамках спринта 14)
     private var visibleCategories: [TrackerCategory] = []
-    private lazy var completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
-    private var id = UUID()
+    private var completedTrackers = [TrackerRecord]()
     private var dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ru_RU")
@@ -47,7 +46,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         for tracker in trackerStore.trackersLoadedFromCoreData {
             categories[0] = categories[0].addNewTracker(Tracker: tracker)
         }
-        completedTrackers = trackerRecordStore.trackersRecordsLoadedFromCoreData
+        completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
         reloadVisibleCategories()
     }
     
@@ -59,6 +58,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     
     // MARK: NewHabitViewControllerDelegate method
     func didCreateNewHabit(name: String, category: String, schedule: String, emoji: String, color: UIColor) {
+        let id = UUID()
         if let index = categories.firstIndex(where: { $0.name == category }) {
             categories[index] = categories[index].addNewTracker(Tracker: Tracker(
                 id: id,
@@ -82,15 +82,13 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     }
     
     func plusButtonInCellSelected(in cell: TrackerCell) {
-        completedTrackers.append(TrackerRecord(id: cell.id, date: datePicker.date))
         trackerRecordStore.addTrackerRecordToCoreData(record: TrackerRecord(id: cell.id, date: currentDate))
+        completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
     }
     
     func plusButtonInCellDeselected(in cell: TrackerCell) {
-        if let index = completedTrackers.firstIndex(where: { $0.id == cell.id }) {
-            completedTrackers.remove(at: index)
-        }
         trackerRecordStore.deleteTrackerRecordInCoreData(record: TrackerRecord(id: cell.id, date: currentDate))
+        completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
     }
     
     private func reloadVisibleCategories() {
@@ -168,12 +166,12 @@ extension TrackerViewController: UICollectionViewDataSource {
         }
         cell.delegate = self
         cell.backgroundColor = .white
-        let recordTuple = checkTrackerRecord(id: visibleCategories[indexPath.section].trackers[indexPath.row].id, date: currentDate)
+        let recordTuple = checkTrackerRecord(id: visibleCategories[indexPath.section].trackers[indexPath.item].id, date: currentDate)
         cell.configureCell(
-            task: visibleCategories[indexPath.section].trackers[indexPath.row].name,
-            emoji: visibleCategories[indexPath.section].trackers[indexPath.row].emoji,
-            color: UIColor(red: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.row].redPartOfColor), green: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.row].greenPartOfColor), blue: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.row].bluePartOfColor), alpha: 1),
-            id: visibleCategories[indexPath.section].trackers[indexPath.row].id,
+            task: visibleCategories[indexPath.section].trackers[indexPath.item].name,
+            emoji: visibleCategories[indexPath.section].trackers[indexPath.item].emoji,
+            color: UIColor(red: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.item].redPartOfColor), green: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.item].greenPartOfColor), blue: CGFloat(visibleCategories[indexPath.section].trackers[indexPath.item].bluePartOfColor), alpha: 1),
+            id: visibleCategories[indexPath.section].trackers[indexPath.item].id,
             days: recordTuple.1,
             isDoneOnThatDay: recordTuple.0
         )

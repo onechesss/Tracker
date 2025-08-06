@@ -25,7 +25,6 @@ final class TrackerStore: NSObject {
             cacheName: nil
         )
         super.init()
-        //fetchedResultsController.delegate = self
         try? fetchedResultsController.performFetch()
         appDelegate.saveContext()
         getTrackersFromCoreData()

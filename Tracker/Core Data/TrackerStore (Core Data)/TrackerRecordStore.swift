@@ -28,6 +28,7 @@ final class TrackerRecordStore {
     }
     
     func getTrackerRecordsFromCoreData() -> [TrackerRecord] {
+        trackersRecordsLoadedFromCoreData = []
         let request = NSFetchRequest<TrackerRecordCoreData>(entityName: "TrackerRecordCoreData")
         guard let trackerRecords = try? context.fetch(request) else { return [] }
         for trackerRecord in trackerRecords {
