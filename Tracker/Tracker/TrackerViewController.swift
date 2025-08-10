@@ -26,9 +26,9 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         layout.sectionInset = .init(top: 30, left: 0, bottom: 0, right: 0)
         return layout
     }()
-    private var categories: [TrackerCategory] = [TrackerCategory(name: "Мок-категория", trackers: [])] // временно (в рамках спринта 14)
+    private lazy var categories: [TrackerCategory] = trackerCategoryStore.getCategoriesFromCoreData()
+    private lazy var completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
     private var visibleCategories: [TrackerCategory] = []
-    private var completedTrackers = [TrackerRecord]()
     private var dateFormatter: DateFormatter = {
         let dateFormatter = DateFormatter()
         dateFormatter.locale = Locale(identifier: "ru_RU")
@@ -38,15 +38,12 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     private let calendar = Calendar.current
     private let trackerStore = TrackerStore()
     private let trackerRecordStore = TrackerRecordStore()
+    private let trackerCategoryStore = TrackerCategoryStore()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupView()
         collectionView.dataSource = self
-        for tracker in trackerStore.trackersLoadedFromCoreData {
-            categories[0] = categories[0].addNewTracker(Tracker: tracker)
-        }
-        completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
         reloadVisibleCategories()
     }
     
@@ -77,6 +74,15 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
                 bluePartOfColor: Float(color.cgColor.components?[2] ?? 0),
                 emoji: emoji,
                 schedule: schedule), in: categories[index], with: categories[index].trackers)
+            trackerCategoryStore.addTrackerToCategoryCoreData(category: categories[index], tracker: Tracker(id: id, name: name, redPartOfColor: Float(color.cgColor.components?[0] ?? 0), greenPartOfColor: Float(color.cgColor.components?[1] ?? 0), bluePartOfColor: Float(color.cgColor.components?[2] ?? 0), emoji: emoji, schedule: schedule))
+        } else {
+            categories.append(TrackerCategory(name: category, trackers: [Tracker(id: id, name: name, redPartOfColor: Float(color.cgColor.components?[0] ?? 0), greenPartOfColor: Float(color.cgColor.components?[1] ?? 0), bluePartOfColor: Float(color.cgColor.components?[2] ?? 0), emoji: emoji, schedule: schedule)]))
+            let fetchedCategories = trackerCategoryStore.getCategoriesFromCoreData()
+            for element in fetchedCategories {
+                if element.name == category {
+                    trackerCategoryStore.addTrackerToCategoryCoreData(category: element, tracker: Tracker(id: id, name: name, redPartOfColor: Float(color.cgColor.components?[0] ?? 0), greenPartOfColor: Float(color.cgColor.components?[1] ?? 0), bluePartOfColor: Float(color.cgColor.components?[2] ?? 0), emoji: emoji, schedule: schedule))
+                }
+            }
         }
         reloadVisibleCategories()
     }
@@ -92,32 +98,15 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     }
     
     private func reloadVisibleCategories() {
-        visibleCategories = []
-        for category in categories {
-            for tracker in category.trackers {
-                if tracker.schedule.contains(dateFormatter.string(from: currentDate)) {
-                    visibleCategories.append(TrackerCategory(name: category.name, trackers: []))
-                    break
-                }
-            }
-        }
-        var i = -1
-        for category in categories {
-            i += 1
-            for tracker in category.trackers {
-                if tracker.schedule.contains(dateFormatter.string(from: currentDate)) {
-                    visibleCategories[i] = visibleCategories[i].addNewTracker(Tracker: tracker)
-                }
-            }
+        let dateString = dateFormatter.string(from: currentDate)
+        visibleCategories = categories.compactMap { category in
+            let filteredTrackers = category.trackers.filter { $0.schedule.contains(dateString) }
+            return filteredTrackers.isEmpty ? nil : TrackerCategory(name: category.name, trackers: filteredTrackers)
         }
         collectionView.reloadData()
-        if !visibleCategories.isEmpty {
-            errorImage.isHidden = true
-            textView.isHidden = true
-        } else {
-            errorImage.isHidden = false
-            textView.isHidden = false
-        }
+        let hasVisible = !visibleCategories.isEmpty
+        errorImage.isHidden = hasVisible
+        textView.isHidden = hasVisible
     }
     
     private func checkTrackerRecord(id: UUID, date: Date) -> (Bool, Int) {

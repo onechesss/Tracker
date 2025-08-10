@@ -41,9 +41,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         let container = NSPersistentContainer(name: "TrackersModel")
         container.loadPersistentStores() { storeDescription, error in
             if let error {
-                print("ошибка по загрузке presistent stores: \(error)")
+                print("ошибка по загрузке persistent stores: \(error)")
             }
-            
         }
         return container
     }()

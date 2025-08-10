@@ -18,7 +18,12 @@ final class SecondOnboardingViewController: UIViewController {
     }
     
     @objc private func continueButtonTapped() {
-#warning("TODO: настроить функцию, которая будет вызываться по тапу на втором экране онбординга")
+        UserDefaults.standard.set(true, forKey: "isOnboardingShown")
+        if let window = UIApplication.shared.windows.first {
+            let tabBarController = TabBarController()
+            window.rootViewController = tabBarController
+        }
+        dismiss(animated: true)
     }
 }
 

@@ -11,7 +11,7 @@ protocol NewHabitViewControllerDelegate: AnyObject {
     func didCreateNewHabit(name: String, category: String, schedule: String, emoji: String, color: UIColor)
 }
 
-final class NewHabitViewController: UIViewController, UITextFieldDelegate, ScheduleViewControllerDelegate {
+final class NewHabitViewController: UIViewController, UITextFieldDelegate, ScheduleViewControllerDelegate, CategoryModelDelegate {
     weak var delegate: NewHabitViewControllerDelegate?
 
     private let label = UILabel()
@@ -52,6 +52,9 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
     private var chosenWeekdays: [String : Bool] = [:]
     private var chosenEmoji = ""
     private var chosenColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+    private var chosenCategory = String()
+    
+    private let categoryModel = CategoryModel()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -61,6 +64,7 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
         colorsCollectionView.dataSource = self
         emojiCollectionView.delegate = self
         colorsCollectionView.delegate = self
+        categoryModel.delegate = self
     }
     
     // MARK: UITextFieldDelegate method
@@ -72,7 +76,7 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
     // MARK: UITextFieldDelegate method
     func textFieldDidEndEditing(_ textField: UITextField) {
         trackerName = textField.text ?? ""
-        if chosenScheduleText.text != "" && trackerName != "" && chosenEmoji != "" && chosenColor != UIColor(red: 0, green: 0, blue: 0, alpha: 1) {
+        if chosenScheduleText.text != "" && trackerName != "" && chosenEmoji != "" && chosenColor != UIColor(red: 0, green: 0, blue: 0, alpha: 1) && chosenCategory != "" {
             createButton.isEnabled = true
         }
     }
@@ -83,9 +87,21 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
         resetTextInScheduleButtonLayoutAfterWeekdaysWereChosen()
     }
     
+    // MARK: CategoryModelDelegate method
+    func categoryWasChosen(chosenCategory: String) {
+        self.chosenCategory = chosenCategory
+        resetTextInCategoryButtonLayoutAfterCategoryWasChosen()
+    }
+    
     @objc private func scheduleButtonTapped() {
         let vc = ScheduleViewController()
         vc.delegate = self
+        present(vc, animated: true)
+    }
+    
+    @objc private func categoryButtonTapped() {
+        let viewModel = CategoryViewModel(model: categoryModel)
+        let vc = CategoryViewController(viewModel: viewModel)
         present(vc, animated: true)
     }
     
@@ -94,7 +110,7 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate, Sched
     }
     
     @objc private func createButtonTapped() {
-        delegate?.didCreateNewHabit(name: trackerName, category: "Мок-категория", schedule: chosenScheduleText.text!, emoji: chosenEmoji, color: chosenColor) // не может быть nil т.к. проверка на nil уже была
+        delegate?.didCreateNewHabit(name: trackerName, category: chosenCategory, schedule: chosenScheduleText.text!, emoji: chosenEmoji, color: chosenColor) // chosenScheduleText.text не может быть nil т.к. проверка на nil уже была
         dismiss(animated: true)
     }
 }
@@ -157,7 +173,7 @@ extension NewHabitViewController: UICollectionViewDelegate {
             guard let color = cell?.colorView.backgroundColor else { return }
             chosenColor = color
         }
-        if chosenScheduleText.text != "" && trackerName != "" && chosenEmoji != "" && chosenColor != UIColor(red: 0, green: 0, blue: 0, alpha: 1) {
+        if chosenScheduleText.text != "" && trackerName != "" && chosenEmoji != "" && chosenColor != UIColor(red: 0, green: 0, blue: 0, alpha: 1) && chosenCategory != "" {
             createButton.isEnabled = true
         }
     }
@@ -264,6 +280,7 @@ private extension NewHabitViewController {
              imageView.topAnchor.constraint(equalTo: categoryButton.topAnchor, constant: 26)
             ]
         )
+        categoryButton.addTarget(self, action: #selector(categoryButtonTapped), for: .touchUpInside)
     }
     
     private func setUpDividerBetweenButtons() {
@@ -344,7 +361,21 @@ private extension NewHabitViewController {
         chosenScheduleText.font = .systemFont(ofSize: 17, weight: .regular)
         chosenScheduleText.topAnchor.constraint(equalTo: scheduleTextInScheduleButton.bottomAnchor, constant: 2).isActive = true
         chosenScheduleText.leadingAnchor.constraint(equalTo: scheduleButton.leadingAnchor, constant: 16).isActive = true
-        if chosenScheduleText.text != "" && trackerName != "" && chosenEmoji != "" && chosenColor != UIColor(red: 0, green: 0, blue: 0, alpha: 1) {
+        if chosenScheduleText.text != "" && trackerName != "" && chosenEmoji != "" && chosenColor != UIColor(red: 0, green: 0, blue: 0, alpha: 1) && chosenCategory != "" {
+            createButton.isEnabled = true
+        }
+    }
+    
+    private func resetTextInCategoryButtonLayoutAfterCategoryWasChosen() {
+        categoryTextInCategoryButton.topAnchor.constraint(equalTo: categoryButton.topAnchor, constant: 15).isActive = true
+        chosenCategoryText.translatesAutoresizingMaskIntoConstraints = false
+        categoryButton.addSubview(chosenCategoryText)
+        chosenCategoryText.text = chosenCategory
+        chosenCategoryText.textColor = .ypGray
+        chosenCategoryText.font = .systemFont(ofSize: 17, weight: .regular)
+        chosenCategoryText.topAnchor.constraint(equalTo: categoryTextInCategoryButton.bottomAnchor, constant: 2).isActive = true
+        chosenCategoryText.leadingAnchor.constraint(equalTo: categoryButton.leadingAnchor, constant: 16).isActive = true
+        if chosenScheduleText.text != "" && trackerName != "" && chosenEmoji != "" && chosenColor != UIColor(red: 0, green: 0, blue: 0, alpha: 1) && chosenCategory != "" {
             createButton.isEnabled = true
         }
     }
