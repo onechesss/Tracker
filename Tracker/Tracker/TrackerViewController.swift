@@ -36,7 +36,6 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         return dateFormatter
     }()
     private let calendar = Calendar.current
-    private let trackerStore = TrackerStore()
     private let trackerRecordStore = TrackerRecordStore()
     private let trackerCategoryStore = TrackerCategoryStore()
     
@@ -57,32 +56,23 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     func didCreateNewHabit(name: String, category: String, schedule: String, emoji: String, color: UIColor) {
         let id = UUID()
         if let index = categories.firstIndex(where: { $0.name == category }) {
-            categories[index] = categories[index].addNewTracker(Tracker: Tracker(
+            trackerCategoryStore.addTrackerToCategoryCoreData(category: categories[index], tracker: Tracker(
                 id: id,
                 name: name,
                 redPartOfColor: Float(color.cgColor.components?[0] ?? 0),
                 greenPartOfColor: Float(color.cgColor.components?[1] ?? 0),
                 bluePartOfColor: Float(color.cgColor.components?[2] ?? 0),
                 emoji: emoji,
-                schedule: schedule)
-            )
-            trackerStore.addTrackerToCoreData(tracker: Tracker(
-                id: id,
-                name: name,
-                redPartOfColor: Float(color.cgColor.components?[0] ?? 0),
-                greenPartOfColor: Float(color.cgColor.components?[1] ?? 0),
-                bluePartOfColor: Float(color.cgColor.components?[2] ?? 0),
-                emoji: emoji,
-                schedule: schedule), in: categories[index], with: categories[index].trackers)
-            trackerCategoryStore.addTrackerToCategoryCoreData(category: categories[index], tracker: Tracker(id: id, name: name, redPartOfColor: Float(color.cgColor.components?[0] ?? 0), greenPartOfColor: Float(color.cgColor.components?[1] ?? 0), bluePartOfColor: Float(color.cgColor.components?[2] ?? 0), emoji: emoji, schedule: schedule))
+                schedule: schedule))
+            categories = trackerCategoryStore.getCategoriesFromCoreData()
         } else {
-            categories.append(TrackerCategory(name: category, trackers: [Tracker(id: id, name: name, redPartOfColor: Float(color.cgColor.components?[0] ?? 0), greenPartOfColor: Float(color.cgColor.components?[1] ?? 0), bluePartOfColor: Float(color.cgColor.components?[2] ?? 0), emoji: emoji, schedule: schedule)]))
             let fetchedCategories = trackerCategoryStore.getCategoriesFromCoreData()
             for element in fetchedCategories {
                 if element.name == category {
                     trackerCategoryStore.addTrackerToCategoryCoreData(category: element, tracker: Tracker(id: id, name: name, redPartOfColor: Float(color.cgColor.components?[0] ?? 0), greenPartOfColor: Float(color.cgColor.components?[1] ?? 0), bluePartOfColor: Float(color.cgColor.components?[2] ?? 0), emoji: emoji, schedule: schedule))
                 }
             }
+            categories = trackerCategoryStore.getCategoriesFromCoreData()
         }
         reloadVisibleCategories()
     }
@@ -124,7 +114,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         }
         return (isThereIsRecordOnThatDay, counterOfCompletedTrackers)
     }
-
+    
     @objc private func plusButtonTapped() {
         let vc = NewHabitViewController()
         vc.delegate = self

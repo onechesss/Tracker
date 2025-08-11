@@ -16,14 +16,10 @@ final class CategoryViewController: UIViewController {
     private let placeholderImage = UIImageView()
     private let placeholderLabel = UILabel()
     
-    private var categories = [String]()
-    private var previousPickedCellIndexPath: IndexPath?
-    
     init(viewModel: CategoryViewModel) {
         self.viewModel = viewModel
         super.init(nibName: nil, bundle: nil)
         bind()
-        self.viewModel.passCategoriesFromModelToView()
     }
     
     required init?(coder: NSCoder) {
@@ -35,16 +31,34 @@ final class CategoryViewController: UIViewController {
         setupView()
         categoriesTable.dataSource = self
         categoriesTable.delegate = self
-        NotificationCenter.default.addObserver(forName: NSNotification.Name("CategoriesChangedInModel"), object: nil, queue: .main) { [weak self] _ in
-            self?.viewModel.passCategoriesFromModelToView()
-            self?.categoriesTable.reloadData()
-        }
     }
     
     private func bind() {
-        viewModel.passCategoriesToView = { [weak self] categories in
-                self?.categories = categories
-                self?.categoriesTable.reloadData()
+        viewModel.changeSelectionStateInTableView = { [weak self] in
+            guard let self else { return }
+            if let actualIndexPath = self.viewModel.pickedCategoryIndexPath {
+                let cell = self.categoriesTable.cellForRow(at: actualIndexPath) as? CategoryCell
+                cell?.pickedCategoryImage.isHidden = false
+            }
+            if let previousIndexPath = viewModel.previousPickedCellIndexPath {
+                let cell = self.categoriesTable.cellForRow(at: previousIndexPath) as? CategoryCell
+                cell?.pickedCategoryImage.isHidden = true
+            }
+        }
+        viewModel.reloadTableView = { [weak self] in
+            guard let self else { return }
+            self.hideTableViewAndShowPlaceholderIfNeeded()
+            self.categoriesTable.reloadData()
+        }
+    }
+    
+    private func hideTableViewAndShowPlaceholderIfNeeded() {
+        if viewModel.categories.count != 0 {
+            placeholderLabel.isHidden = true
+            placeholderImage.isHidden = true
+            categoriesTable.isHidden = false
+        } else {
+            categoriesTable.isHidden = true
         }
     }
     
@@ -58,11 +72,13 @@ final class CategoryViewController: UIViewController {
 // MARK: Categories table view data source
 extension CategoryViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categories.count
+        return viewModel.categories.count
     }
     
-    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell { 
-        return cellForRow(at: indexPath) 
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "categoryCell") as? CategoryCell else { return UITableViewCell() }
+        cell.configure(with: viewModel.categories[indexPath.row].name)
+        return cell
     }
 }
 
@@ -74,24 +90,8 @@ extension CategoryViewController: UITableViewDelegate {
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        viewModel.model.chosenCategory = categories[indexPath.row]
-        if let previousPickedCellIndexPath {
-            let previousPickedCell = tableView.cellForRow(at: previousPickedCellIndexPath)
-            guard let previousSubviews = previousPickedCell?.contentView.subviews else { return }
-            for subview in previousSubviews {
-                if let pickedCategoryImage = subview as? UIImageView {
-                    pickedCategoryImage.isHidden = true
-                }
-            }
-        }
-        let cell = tableView.cellForRow(at: indexPath)
-        guard let subviews = cell?.contentView.subviews else { return }
-        for subview in subviews {
-            if let pickedCategoryImage = subview as? UIImageView {
-                pickedCategoryImage.isHidden = false
-            }
-        }
-        previousPickedCellIndexPath = indexPath
+        let index = indexPath.row
+        viewModel.tableViewCellSelected(at: index, indexPath: indexPath)
         tableView.deselectRow(at: indexPath, animated: true)
     }
 }
@@ -106,12 +106,7 @@ private extension CategoryViewController {
         setUpCategoriesTable()
         setUpPlaceholderImage()
         setUpPlaceholderLabel()
-        if categories.count != 0 {
-            placeholderLabel.isHidden = true
-            placeholderImage.isHidden = true
-        } else {
-            categoriesTable.isHidden = true
-        }
+        hideTableViewAndShowPlaceholderIfNeeded()
     }
     
     private func setUpCategoryLabel() {
@@ -150,34 +145,7 @@ private extension CategoryViewController {
         categoriesTable.backgroundColor = UIColor(resource: .categoriesTableBackground)
         categoriesTable.layer.cornerRadius = 16
         categoriesTable.layer.masksToBounds = true
-    }
-    
-    // MARK: метод подготовки ячейки для таблицы категорий
-    private func cellForRow(at indexPath: IndexPath) -> UITableViewCell {
-        let cell = UITableViewCell()
-        cell.backgroundColor = UIColor(resource: .categoriesTableBackground)
-        cell.translatesAutoresizingMaskIntoConstraints = false
-        cell.selectionStyle = .none
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        cell.contentView.addSubview(label)
-        NSLayoutConstraint.activate([
-            label.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
-            label.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16)
-        ])
-        label.font = .systemFont(ofSize: 17, weight: .regular)
-        label.textColor = .black
-        label.text = categories[indexPath.row]
-        let pickedCategoryImage = UIImageView()
-        pickedCategoryImage.translatesAutoresizingMaskIntoConstraints = false
-        cell.contentView.addSubview(pickedCategoryImage)
-        NSLayoutConstraint.activate([
-            pickedCategoryImage.centerYAnchor.constraint(equalTo: cell.contentView.centerYAnchor),
-            pickedCategoryImage.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -16)
-        ])
-        pickedCategoryImage.image = UIImage(resource: .pickedCategory)
-        pickedCategoryImage.isHidden = true
-        return cell
+        categoriesTable.register(CategoryCell.self, forCellReuseIdentifier: "categoryCell")
     }
     
     private func setUpPlaceholderImage() {

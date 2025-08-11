@@ -30,16 +30,17 @@ final class NewCategoryViewController: UIViewController, UITextFieldDelegate {
     }
     
     // MARK: UITextFieldDelegate method
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        if textField.text != "" && textField.text != nil {
-            readyButton.isEnabled = true
-        }
-    }
-    
-    // MARK: UITextFieldDelegate method
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
+    }
+    
+    @objc private func textFieldDidChange(_ textField: UITextField) {
+        if textField.text != "" && textField.text != nil {
+            readyButton.isEnabled = true
+        } else {
+            readyButton.isEnabled = false
+        }
     }
     
     @objc private func readyButtonTapped() {
@@ -90,6 +91,7 @@ extension NewCategoryViewController {
             .font: UIFont.systemFont(ofSize: 17, weight: .regular)
         ]
         categoryNameTextField.attributedPlaceholder = NSAttributedString(string: "Введите название категории", attributes: attributes)
+        categoryNameTextField.addTarget(self, action: #selector(textFieldDidChange(_:)), for: .editingChanged)
     }
     
     private func setUpReadyButton() {
