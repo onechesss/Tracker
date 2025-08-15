@@ -3,7 +3,6 @@
     <entity name="TrackerCategoryCoreData" representedClassName="TrackerCategoryCoreData" syncable="YES" codeGenerationType="class">
         <attribute name="name" attributeType="String"/>
         <attribute name="trackers" attributeType="Transformable" valueTransformerName="TrackerValueTransformer"/>
-        <relationship name="tracker" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TrackerCoreData" inverseName="category" inverseEntity="TrackerCoreData"/>
     </entity>
     <entity name="TrackerCoreData" representedClassName="TrackerCoreData" syncable="YES" codeGenerationType="class">
         <attribute name="bluePartOfColor" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
@@ -13,7 +12,6 @@
         <attribute name="name" attributeType="String"/>
         <attribute name="redPartOfColor" attributeType="Float" defaultValueString="0.0" usesScalarValueType="YES"/>
         <attribute name="schedule" attributeType="String"/>
-        <relationship name="category" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="TrackerCategoryCoreData" inverseName="tracker" inverseEntity="TrackerCategoryCoreData"/>
     </entity>
     <entity name="TrackerRecordCoreData" representedClassName="TrackerRecordCoreData" syncable="YES" codeGenerationType="class">
         <attribute name="date" attributeType="Date" usesScalarValueType="NO"/>
