@@ -7,7 +7,8 @@
 
 import UIKit
 
-final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHabitViewControllerDelegate, TrackerCellDelegate {
+final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHabitViewControllerDelegate, TrackerCellDelegate, EditHabitViewControllerDelegate {
+    // MARK: TrackerCellDelegate property
     var currentDate = Date()
     
     private let errorImage = UIImageView()
@@ -23,7 +24,7 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         layout.minimumInteritemSpacing = 9
         layout.scrollDirection = .vertical
         layout.headerReferenceSize = CGSize(width: 200, height: 6)
-        layout.sectionInset = .init(top: 30, left: 0, bottom: 0, right: 0)
+        layout.sectionInset = .init(top: 30, left: 16, bottom: 0, right: 16)
         return layout
     }()
     private lazy var categories: [TrackerCategory] = trackerCategoryStore.getCategoriesFromCoreData()
@@ -77,6 +78,15 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         reloadVisibleCategories()
     }
     
+    // MARK: NewHabitViewControllerDelegate method
+    func didEditExistingHabit(old: Tracker, new: Tracker, to category: TrackerCategory) {
+        trackerCategoryStore.deleteTrackerInTrackerCategoryCoreData(tracker: old)
+        trackerCategoryStore.addTrackerToCategoryCoreData(category: category, tracker: new)
+        categories = trackerCategoryStore.getCategoriesFromCoreData()
+        reloadVisibleCategories()
+    }
+    
+    // MARK: TrackerCellDelegate methods (plusButtonInCellSelected, plusButtonInCellDeselected, presentTrackerEditingViewController)
     func plusButtonInCellSelected(in cell: TrackerCell) {
         trackerRecordStore.addTrackerRecordToCoreData(record: TrackerRecord(id: cell.id, date: currentDate))
         completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
@@ -87,11 +97,26 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
         completedTrackers = trackerRecordStore.getTrackerRecordsFromCoreData()
     }
     
+    func presentTrackerEditingViewController(for cell: TrackerCell) {
+        let vc = EditHabitViewController(cell: cell, categories: categories)
+        vc.delegate = self
+        present(vc, animated: true)
+    }
+    
     private func reloadVisibleCategories() {
         let dateString = dateFormatter.string(from: currentDate)
+        // фильтрация по дате из datePicker
         visibleCategories = categories.compactMap { category in
             let filteredTrackers = category.trackers.filter { $0.schedule.contains(dateString) }
             return filteredTrackers.isEmpty ? nil : TrackerCategory(name: category.name, trackers: filteredTrackers)
+        }
+        // фильтрация по названию трекера из searchField (только если набран текст в searchField)
+        if let text = searchField.text,
+           !text.isEmpty {
+            visibleCategories = visibleCategories.compactMap { category in
+                let filteredTrackers = category.trackers.filter { $0.name.lowercased().contains(text.lowercased()) }
+                return filteredTrackers.isEmpty ? nil : TrackerCategory(name: category.name, trackers: filteredTrackers)
+            }
         }
         collectionView.reloadData()
         let hasVisible = !visibleCategories.isEmpty
@@ -123,6 +148,10 @@ final class TrackerViewController: UIViewController, UITextFieldDelegate, NewHab
     
     @objc private func datePickerValueChanged() {
         currentDate = datePicker.date
+        reloadVisibleCategories()
+    }
+    
+    @objc private func searchFieldDidEndEditing() {
         reloadVisibleCategories()
     }
 }
@@ -200,7 +229,7 @@ private extension TrackerViewController {
         tv.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         tv.widthAnchor.constraint(equalToConstant: 254).isActive = true
         tv.heightAnchor.constraint(equalToConstant: 41).isActive = true
-        tv.text = "Трекеры"
+        tv.text = NSLocalizedString("trackersLabelOnTrackersView", comment: "")
         tv.textColor = .black
         tv.font = .systemFont(ofSize: 34, weight: .bold)
     }
@@ -212,11 +241,12 @@ private extension TrackerViewController {
         tf.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
         tf.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
         tf.heightAnchor.constraint(equalToConstant: 36).isActive = true
-        tf.placeholder = "Поиск"
+        tf.placeholder = NSLocalizedString("searchFieldPlaceholder", comment: "")
         tf.textColor = .ypGray
         tf.backgroundColor = UIColor(named: "YP search field color")
         tf.layer.cornerRadius = 10
         tf.layer.masksToBounds = true
+        tf.addTarget(self, action: #selector(searchFieldDidEndEditing), for: .editingChanged)
     }
     
     private func setUpDatePicker(dp: UIDatePicker) {
@@ -244,7 +274,7 @@ private extension TrackerViewController {
         view.addSubview(tv)
         tv.topAnchor.constraint(equalTo: errorImage.bottomAnchor, constant: 8).isActive = true
         tv.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        tv.text = "Что будем отслеживать?"
+        tv.text = NSLocalizedString("whenNoTrackersPlaceholder", comment: "")
         tv.font = .systemFont(ofSize: 12, weight: .medium)
         tv.textColor = .black
     }
@@ -255,9 +285,9 @@ private extension TrackerViewController {
         cv.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(cv)
         cv.topAnchor.constraint(equalTo: searchField.bottomAnchor, constant: 34).isActive = true
-        cv.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16).isActive = true
+        cv.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 0).isActive = true
         cv.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).isActive = true
-        cv.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16).isActive = true
+        cv.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: 0).isActive = true
         cv.backgroundColor = .white
     }
 }

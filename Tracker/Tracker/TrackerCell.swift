@@ -8,21 +8,25 @@
 import UIKit
 
 protocol TrackerCellDelegate: AnyObject {
+    var currentDate: Date { get set }
     func plusButtonInCellSelected(in cell: TrackerCell)
     func plusButtonInCellDeselected(in cell: TrackerCell)
-    var currentDate: Date { get set }
+    func presentTrackerEditingViewController(for cell: TrackerCell)
 }
 
 final class TrackerCell: UICollectionViewCell {
     weak var delegate: TrackerCellDelegate?
     var id = UUID()
     
-    private let taskLabel = UILabel()
-    private let emojiLabel = UILabel()
-    private let daysLabel = UILabel()
-    private let colorView = UIView()
+    let daysLabel = UILabel()
+    let taskLabel = UILabel()
+    let emojiLabel = UILabel()
+    let colorView = UIView()
+    
     private let button = UIButton()
     private let emojiBackgroundView = UIView()
+    
+    private let containerForContextMenu = UIView()
     
     private let calendar = Calendar.current
     
@@ -41,7 +45,10 @@ final class TrackerCell: UICollectionViewCell {
         colorView.backgroundColor = color
         button.tintColor = color
         self.id = id
-        daysLabel.text = "\(days) \(rightDaysWord(days: days))"
+        daysLabel.text = String.localizedStringWithFormat(
+            NSLocalizedString("numberOfDays", comment: "Number of remaining tasks"),
+            days
+        )
         if isDoneOnThatDay {
             button.isSelected = true
         } else {
@@ -53,43 +60,56 @@ final class TrackerCell: UICollectionViewCell {
             button.isEnabled = false
         }
     }
-    
-    private func rightDaysWord(days: Int) -> String {
-        if days == 11 || days == 12 || days == 13 || days == 14 {
-            return "дней"
-        }
-        let remainderOfDivisionByTen = days % 10
-        switch remainderOfDivisionByTen {
-        case 0:
-            return "дней"
-        case 1:
-            return "день"
-        case 2:
-            return "дня"
-        case 3:
-            return "дня"
-        case 4:
-            return "дня"
-        default:
-            return "дней"
-        }
-    }
-    
+
     @objc private func buttonTapped() {
         if button.isSelected {
             delegate?.plusButtonInCellDeselected(in: self)
             button.isSelected = false
 // здесь и далее используется force unwrap т.к. свойства точно не nil
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
-            daysLabel.text = "\(Int(numberAndWord[0])! - 1) \(rightDaysWord(days: Int(numberAndWord[0])! - 1))"
+            daysLabel.text = String.localizedStringWithFormat(
+                NSLocalizedString("numberOfDays", comment: "Number of remaining tasks"),
+                (Int(numberAndWord[0])! - 1)
+            )
             button.tintColor = colorView.backgroundColor
         } else {
             delegate?.plusButtonInCellSelected(in: self)
             button.isSelected = true
             let numberAndWord = daysLabel.text!.components(separatedBy: " ")
-            daysLabel.text = "\(Int(numberAndWord[0])! + 1) \(rightDaysWord(days: Int(numberAndWord[0])! + 1))"
+            daysLabel.text = String.localizedStringWithFormat(
+                NSLocalizedString("numberOfDays", comment: "Number of remaining tasks"),
+                (Int(numberAndWord[0])! + 1)
+            )
             button.tintColor = colorView.backgroundColor
         }
+    }
+}
+
+
+// MARK: UIContextMenuInteractionDelegate и вызываемые им методы
+extension TrackerCell: UIContextMenuInteractionDelegate {
+    private func editButtonInContextMenuTapped(tappedCell: TrackerCell) {
+        delegate?.presentTrackerEditingViewController(for: self)
+    }
+    
+    private func deleteButtonInContextMenuDidTapped(tappedCell: TrackerCell) {
+
+    }
+    
+    func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint
+    ) -> UIContextMenuConfiguration? {
+        return UIContextMenuConfiguration(actionProvider: { actions in
+            return UIMenu(children: [
+                UIAction(title: "Редактировать") { [weak self] _ in
+                    guard let self else { return }
+                    self.editButtonInContextMenuTapped(tappedCell: self)
+                },
+                UIAction(title: "Удалить", attributes: .destructive) { [weak self] _ in
+                    guard let self else { return }
+                    self.deleteButtonInContextMenuDidTapped(tappedCell: self)
+                },
+            ])
+        })
     }
 }
 
@@ -103,6 +123,7 @@ private extension TrackerCell {
         setUpEmojiLabel(emojiLabel: emojiLabel, background: emojiBackgroundView)
         setUpDaysLabel(dl: daysLabel)
         setUpButton(button: button)
+        setUpContainerForContextMenu()
     }
     
     private func setUpTaskLabel(label: UILabel, cv: UIView) {
@@ -124,7 +145,6 @@ private extension TrackerCell {
         cv.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
         cv.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
         cv.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -58).isActive = true
-        cv.backgroundColor = .ypGreen
         cv.layer.cornerRadius = 16
     }
     
@@ -152,7 +172,7 @@ private extension TrackerCell {
         dl.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(dl)
         dl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12).isActive = true
-        dl.text = "0 дней"
+        dl.text = String.localizedStringWithFormat(NSLocalizedString("numberOfDays", comment: ""), 0)
         dl.textColor = .black
         dl.font = .systemFont(ofSize: 12, weight: .medium)
     }
@@ -172,5 +192,24 @@ private extension TrackerCell {
         button.setImage(.cellButtonTapped, for: .selected)
         button.layer.cornerRadius = 17
         button.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
+    }
+    
+    private func setUpContainerForContextMenu() {
+        containerForContextMenu.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(containerForContextMenu)
+        contentView.addSubview(containerForContextMenu)
+        containerForContextMenu.topAnchor.constraint(equalTo: contentView.topAnchor).isActive = true
+        containerForContextMenu.leadingAnchor.constraint(equalTo: contentView.leadingAnchor).isActive = true
+        containerForContextMenu.trailingAnchor.constraint(equalTo: contentView.trailingAnchor).isActive = true
+        containerForContextMenu.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -58).isActive = true
+        containerForContextMenu.layer.cornerRadius = 16
+        containerForContextMenu.backgroundColor = .clear
+        containerForContextMenu.addSubview(colorView)
+        containerForContextMenu.addSubview(emojiLabel)
+        containerForContextMenu.addSubview(emojiBackgroundView)
+        containerForContextMenu.addSubview(taskLabel)
+        let interaction = UIContextMenuInteraction(delegate: self)
+        containerForContextMenu.addInteraction(interaction)
+        containerForContextMenu.isUserInteractionEnabled = true
     }
 }
