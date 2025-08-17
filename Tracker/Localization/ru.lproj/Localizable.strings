@@ -11,3 +11,5 @@
 "trackersLabelOnTrackersView" = "Трекеры";
 "searchFieldPlaceholder" = "Поиск";
 "whenNoTrackersPlaceholder" = "Что будем отслеживать?";
+"nothingFound" = "Ничего не найдено";
+"filtersButton" = "Фильтры";

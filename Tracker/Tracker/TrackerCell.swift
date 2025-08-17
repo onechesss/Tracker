@@ -12,6 +12,7 @@ protocol TrackerCellDelegate: AnyObject {
     func plusButtonInCellSelected(in cell: TrackerCell)
     func plusButtonInCellDeselected(in cell: TrackerCell)
     func presentTrackerEditingViewController(for cell: TrackerCell)
+    func presentDeleteConfirmationAlert(for cell: TrackerCell)
 }
 
 final class TrackerCell: UICollectionViewCell {
@@ -82,18 +83,21 @@ final class TrackerCell: UICollectionViewCell {
             )
             button.tintColor = colorView.backgroundColor
         }
+        trackerDoneOrNotDoneButtonTapped()
     }
 }
 
 
 // MARK: UIContextMenuInteractionDelegate и вызываемые им методы
 extension TrackerCell: UIContextMenuInteractionDelegate {
-    private func editButtonInContextMenuTapped(tappedCell: TrackerCell) {
+    private func editButtonInContextMenuTapped() {
         delegate?.presentTrackerEditingViewController(for: self)
+        editButtonInContextualMenuTappedReport()
     }
     
-    private func deleteButtonInContextMenuDidTapped(tappedCell: TrackerCell) {
-
+    private func deleteButtonInContextMenuDidTapped() {
+        delegate?.presentDeleteConfirmationAlert(for: self)
+        deleteButtonInContextualMenuTappedReport()
     }
     
     func contextMenuInteraction(_ interaction: UIContextMenuInteraction, configurationForMenuAtLocation location: CGPoint
@@ -102,11 +106,11 @@ extension TrackerCell: UIContextMenuInteractionDelegate {
             return UIMenu(children: [
                 UIAction(title: "Редактировать") { [weak self] _ in
                     guard let self else { return }
-                    self.editButtonInContextMenuTapped(tappedCell: self)
+                    self.editButtonInContextMenuTapped()
                 },
                 UIAction(title: "Удалить", attributes: .destructive) { [weak self] _ in
                     guard let self else { return }
-                    self.deleteButtonInContextMenuDidTapped(tappedCell: self)
+                    self.deleteButtonInContextMenuDidTapped()
                 },
             ])
         })
@@ -117,6 +121,7 @@ extension TrackerCell: UIContextMenuInteractionDelegate {
 // MARK: setup view
 private extension TrackerCell {
     private func setupView() {
+        backgroundColor = .clear
         setUpColorView(cv: colorView)
         setUpTaskLabel(label: taskLabel, cv: colorView)
         setUpEmojiBackgroundView(view: emojiBackgroundView)
@@ -173,8 +178,12 @@ private extension TrackerCell {
         contentView.addSubview(dl)
         dl.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12).isActive = true
         dl.text = String.localizedStringWithFormat(NSLocalizedString("numberOfDays", comment: ""), 0)
-        dl.textColor = .black
         dl.font = .systemFont(ofSize: 12, weight: .medium)
+        if traitCollection.userInterfaceStyle == .dark {
+            dl.textColor = .white
+        } else {
+            dl.textColor = .black
+        }
     }
     
     private func setUpButton(button: UIButton) {
@@ -211,5 +220,37 @@ private extension TrackerCell {
         let interaction = UIContextMenuInteraction(delegate: self)
         containerForContextMenu.addInteraction(interaction)
         containerForContextMenu.isUserInteractionEnabled = true
+    }
+}
+
+
+// MARK: реализация темной и светлой тем
+extension TrackerCell {
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 13.0, *),
+           traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            if traitCollection.userInterfaceStyle == .dark {
+                daysLabel.textColor = .white
+            } else {
+                daysLabel.textColor = .black
+            }
+        }
+    }
+}
+
+
+// MARK: реализация аналитики (отправка событий через AppMetrica)
+private extension TrackerCell {
+    private func trackerDoneOrNotDoneButtonTapped() {
+        AnalyticsManager.reportEvent(eventName: AnalyticsParametersEvent.click, onScreen: AnalyticsParametersScreen.main, triggeredItem: AnalyticsParametersItem.trackerDoneOrNotDoneButtonTapped)
+    }
+    
+    private func editButtonInContextualMenuTappedReport() {
+        AnalyticsManager.reportEvent(eventName: AnalyticsParametersEvent.click, onScreen: AnalyticsParametersScreen.main, triggeredItem: AnalyticsParametersItem.editButtonInContextualMenuTapped)
+    }
+    
+    private func deleteButtonInContextualMenuTappedReport(){
+        AnalyticsManager.reportEvent(eventName: AnalyticsParametersEvent.click, onScreen: AnalyticsParametersScreen.main, triggeredItem: AnalyticsParametersItem.deleteButtonInContextualMenuTapped)
     }
 }

@@ -58,8 +58,8 @@ final class EditHabitViewController: UIViewController, UITextFieldDelegate, Sche
     
     private let categoryModel = CategoryModel()
     private let cell: TrackerCell
-    private var categoryToAddTo = TrackerCategory(name: "", trackers: [])
     private var oldTrackerToRemove = Tracker(id: UUID(), name: "", redPartOfColor: 0, greenPartOfColor: 0, bluePartOfColor: 0, emoji: "", schedule: "")
+    private let trackerCategoryStore = TrackerCategoryStore()
     
     init(cell: TrackerCell, categories: [TrackerCategory]) {
         self.cell = cell
@@ -70,7 +70,6 @@ final class EditHabitViewController: UIViewController, UITextFieldDelegate, Sche
             for tracker in category.trackers {
                 if tracker.name == cell.taskLabel.text {
                     oldTrackerToRemove = tracker
-                    categoryToAddTo = TrackerCategory(name: category.name, trackers: category.trackers)
                     chosenScheduleText.text = tracker.schedule
                     chosenCategoryText.text = category.name
                     chosenCategory = category.name
@@ -151,8 +150,24 @@ final class EditHabitViewController: UIViewController, UITextFieldDelegate, Sche
     }
     
     @objc private func saveButtonTapped() {
-        delegate?.didEditExistingHabit(old: oldTrackerToRemove, new: Tracker(id: UUID(), name: trackerName, redPartOfColor: Float(chosenColor.cgColor.components?[0] ?? 0), greenPartOfColor: Float(chosenColor.cgColor.components?[1] ?? 0), bluePartOfColor: Float(chosenColor.cgColor.components?[2] ?? 0), emoji: chosenEmoji, schedule: chosenScheduleText.text ?? ""), to: categoryToAddTo)
-        
+        let oldCategories = trackerCategoryStore.getCategoriesFromCoreData()
+        var newCategoryToAddTrackerToName = String()
+        var newCategoryToAddTrackerToTrackers = [Tracker]()
+        for category in oldCategories {
+            if category.name == chosenCategory {
+                newCategoryToAddTrackerToName = category.name
+                newCategoryToAddTrackerToTrackers = category.trackers
+            }
+        }
+        let newCategoryToAddTrackerTo = TrackerCategory(name: newCategoryToAddTrackerToName, trackers: newCategoryToAddTrackerToTrackers)
+        delegate?.didEditExistingHabit(old: oldTrackerToRemove, new: Tracker(id: oldTrackerToRemove.id,
+                                                                             name: trackerName,
+                                                                             redPartOfColor: Float(chosenColor.cgColor.components?[0] ?? 0),
+                                                                             greenPartOfColor: Float(chosenColor.cgColor.components?[1] ?? 0),
+                                                                             bluePartOfColor: Float(chosenColor.cgColor.components?[2] ?? 0),
+                                                                             emoji: chosenEmoji, schedule: chosenScheduleText.text ?? ""),
+                                       to: TrackerCategory(name: chosenCategory, trackers: newCategoryToAddTrackerTo.trackers)
+        )
         dismiss(animated: true)
     }
     

@@ -46,12 +46,13 @@ final class TrackerCategoryStore {
         appDelegate.saveContext()
     }
 
-    func deleteTrackerInTrackerCategoryCoreData(tracker: Tracker) {
+    func deleteTrackerFromCategoryCoreData(tracker: Tracker) {
         let request = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
         guard let categories = try? context.fetch(request) else { return }
         for category in categories {
-            if var trackersArray = category.trackers as? [Tracker] {
-                trackersArray.removeAll { $0.id == tracker.id }
+            guard var trackersArray = category.trackers as? [Tracker] else { return }
+            for _ in trackersArray {
+                trackersArray.removeAll(where: { $0.id == tracker.id } )
                 category.trackers = trackersArray as NSObject
             }
         }

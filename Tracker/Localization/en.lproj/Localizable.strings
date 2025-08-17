@@ -11,3 +11,5 @@
 "trackersLabelOnTrackersView" = "Trackers";
 "searchFieldPlaceholder" = "Search";
 "whenNoTrackersPlaceholder" = "What are we gonna track";
+"nothingFound" = "Nothing found";
+"filtersButton" = "Filters";

@@ -16,7 +16,12 @@ final class TrackerHeader: UICollectionReusableView {
         addSubview(categoryLabel)
         categoryLabel.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16).isActive = true
         categoryLabel.font = .systemFont(ofSize: 19, weight: .bold)
-        categoryLabel.textColor = .black
+        if traitCollection.userInterfaceStyle == .dark {
+            categoryLabel.textColor = .white
+        } else {
+            categoryLabel.textColor = .black
+        }
+        backgroundColor = .clear
     }
     
     required init?(coder: NSCoder) {
@@ -25,5 +30,21 @@ final class TrackerHeader: UICollectionReusableView {
     
     func configureHeader(with text: String) {
         categoryLabel.text = text
+    }
+}
+
+
+// MARK: реализация темной и светлой тем
+extension TrackerHeader {
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if #available(iOS 13.0, *),
+           traitCollection.hasDifferentColorAppearance(comparedTo: previousTraitCollection) {
+            if traitCollection.userInterfaceStyle == .dark {
+                categoryLabel.textColor = .white
+            } else {
+                categoryLabel.textColor = .black
+            }
+        }
     }
 }

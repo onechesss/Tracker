@@ -71,6 +71,7 @@ private extension ScheduleViewController {
         scheduleLabel.text = "Расписание"
         scheduleLabel.textColor = .black
         scheduleLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        scheduleLabel.textAlignment = .center
     }
     
     private func setUpMondayView() {
