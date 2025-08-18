@@ -30,8 +30,6 @@ final class TrackerCategoryStore {
         for category in categories {
             categoriesFromCoreData.append(TrackerCategory(name: category.name ?? "", trackers: category.trackers as? [Tracker] ?? []))
         }
-        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return [] }
-        appDelegate.saveContext()
         return categoriesFromCoreData
     }
     
@@ -42,6 +40,20 @@ final class TrackerCategoryStore {
         for category in categories {
             if category.name == categoryWithNewTracker.name {
                 category.trackers = categoryWithNewTracker.trackers as NSObject
+            }
+        }
+        guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }
+        appDelegate.saveContext()
+    }
+
+    func deleteTrackerFromCategoryCoreData(tracker: Tracker) {
+        let request = NSFetchRequest<TrackerCategoryCoreData>(entityName: "TrackerCategoryCoreData")
+        guard let categories = try? context.fetch(request) else { return }
+        for category in categories {
+            guard var trackersArray = category.trackers as? [Tracker] else { return }
+            for _ in trackersArray {
+                trackersArray.removeAll(where: { $0.id == tracker.id } )
+                category.trackers = trackersArray as NSObject
             }
         }
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else { return }

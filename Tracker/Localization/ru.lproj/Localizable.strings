@@ -1,0 +1,15 @@
+/* 
+  Localizable.strings
+  Tracker
+
+  Created by oneche$$$ on 12.08.2025.
+  
+*/
+
+"trackersTabBar" = "Трекеры";
+"statisticsTabBar" = "Статистика";
+"trackersLabelOnTrackersView" = "Трекеры";
+"searchFieldPlaceholder" = "Поиск";
+"whenNoTrackersPlaceholder" = "Что будем отслеживать?";
+"nothingFound" = "Ничего не найдено";
+"filtersButton" = "Фильтры";
