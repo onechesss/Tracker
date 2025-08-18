@@ -17,6 +17,6 @@ final class TrackerTests: XCTestCase {
     
     func testTrackerViewControllerSnapshotForDarkTheme() {
         let sut = TrackerViewController()
-        assertSnapshot(of: sut, as: .image(traits: .init(userInterfaceStyle: .light)))
+        assertSnapshot(of: sut, as: .image(traits: .init(userInterfaceStyle: .dark)))
     }
 }
