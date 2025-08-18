@@ -1,0 +1,15 @@
+/* 
+  Localizable (English).strings
+  Tracker
+
+  Created by oneche$$$ on 12.08.2025.
+  
+*/
+
+"trackersTabBar" = "Trackers";
+"statisticsTabBar" = "Statistics";
+"trackersLabelOnTrackersView" = "Trackers";
+"searchFieldPlaceholder" = "Search";
+"whenNoTrackersPlaceholder" = "What are we gonna track";
+"nothingFound" = "Nothing found";
+"filtersButton" = "Filters";
