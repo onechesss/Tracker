@@ -28,6 +28,12 @@ enum AnalyticsParametersItem {
 
 
 final class AnalyticsManager {
+    static func activateAnalyticsConfiguration() {
+        if let configuration = AppMetricaConfiguration(apiKey: "64806615-3c2e-4d4e-8bd8-b3ae8249d7af") {
+            AppMetrica.activate(with: configuration)
+        }
+    }
+    
     static func reportEvent(eventName: String, onScreen: String, triggeredItem: String?) {
         var parameters: [String: String] = [:]
         if let triggeredItem {

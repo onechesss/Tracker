@@ -16,9 +16,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // MARK: инициализация AppMetrica
-        if let configuration = AppMetricaConfiguration(apiKey: "64806615-3c2e-4d4e-8bd8-b3ae8249d7af") {
-            AppMetrica.activate(with: configuration)
-        }
+        AnalyticsManager.activateAnalyticsConfiguration()
         // MARK: регистрация трансформера (Core Data)
         TrackerValueTransformer.register()
         return true
